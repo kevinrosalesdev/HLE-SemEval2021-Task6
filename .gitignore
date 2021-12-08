@@ -1,5 +1,8 @@
 propaganda_detection
 papers
+src/datapreprocessing/__pychache__
+src/model/__pychache__
 
 .idea
 HLE-CourseWork.iml
+models
