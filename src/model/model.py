@@ -4,6 +4,7 @@ from torch.optim.adam import Adam
 from tqdm import tqdm
 from transformers import RobertaTokenizer, RobertaForTokenClassification
 from torch import nn
+from src.model.custom_loss import AsymmetricLoss
 
 import torch
 
@@ -39,6 +40,7 @@ def train(input_text: list, labels: list):
 
     model = MEMbErt()
     loss_criterion = nn.BCELoss()  # Binary Cross-Entropy
+    #loss_criterion = AsymmetricLoss()
     optimizer = Adam(model.parameters())
     num_epochs = 5
     batch_size = 1
