@@ -9,13 +9,23 @@ from src.model.custom_loss import AsymmetricLoss
 
 
 # TODO: Use transformers trained with Twitter Data
+# TODO: Ensemble of Transformers
+# TODO: Try other losses
+# TODO: Use CLS token
+# TODO: Tune threshold.
+
 # TODO: Use word representations
+
 class MEMbErt(nn.Module):
     def __init__(self):
         super(MEMbErt, self).__init__()
 
-        self.tokenizer = RobertaTokenizer.from_pretrained('roberta-base', add_prefix_space=False)
-        self.tc = RobertaForTokenClassification.from_pretrained('roberta-base', num_labels=20)
+        self.tokenizer = RobertaTokenizer.from_pretrained('roberta-large', add_prefix_space=False)
+        self.tc = RobertaForTokenClassification.from_pretrained('roberta-large', num_labels=20)
+
+        for parameter in list(self.tc.parameters())[:-2]:
+            parameter.requires_grad = False
+
         # self.fc = nn.Linear(in_features=2, out_features=20)
         self.act = nn.Sigmoid()
 
@@ -33,10 +43,10 @@ class MEMbErt(nn.Module):
 def train(input_t_text: list, t_labels: list, input_v_text: list, v_labels: list):
 
     model = MEMbErt().cuda()
-    loss_criterion = nn.BCELoss()  # Binary Cross-Entropy
-    # loss_criterion = AsymmetricLoss()
+    # loss_criterion = nn.BCELoss()  # Binary Cross-Entropy
+    loss_criterion = AsymmetricLoss()
     optimizer = Adam(model.parameters())
-    num_epochs = 5
+    num_epochs = 1
     batch_size = 1
     batch_per_epoch = len(input_t_text)
     model.train()

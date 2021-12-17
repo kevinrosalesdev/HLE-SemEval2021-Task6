@@ -21,9 +21,9 @@ class AsymmetricLoss(nn.Module):
         """
 
         # Calculating Probabilities
-        x_sigmoid = torch.sigmoid(x)
-        xs_pos = x_sigmoid
-        xs_neg = 1 - x_sigmoid
+        # x_sigmoid = torch.sigmoid(x)
+        xs_pos = x
+        xs_neg = 1 - x
 
         # Asymmetric Clipping
         if self.clip is not None and self.clip > 0:
