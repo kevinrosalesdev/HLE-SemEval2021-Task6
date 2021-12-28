@@ -6,3 +6,6 @@ src/model/__pychache__
 .idea
 HLE-CourseWork.iml
 models
+tab-separated-values.csv
+out/out.txt
+out/out-dev.txt

@@ -37,7 +37,10 @@ def adjust_output(tokenizer: RobertaTokenizer, sentence: str, output: np.ndarray
 
 
 def postprocess_data(metadata: list, input_data: list, model_prediction: list,
-                     tokenizer: RobertaTokenizer, threshold: float) -> list:
+                     tokenizer: RobertaTokenizer, threshold) -> list:
+    if isinstance(threshold, float):
+        threshold = [threshold]*20
+
     output = []
     labels_file = "SEMEVAL-2021-task6-corpus/techniques_list_task1-2.txt"
     label_dict = {}
@@ -55,7 +58,7 @@ def postprocess_data(metadata: list, input_data: list, model_prediction: list,
         labels = []
 
         for propaganda_technique in range(20):
-            accepted_words = np.where(prediction_i[:, propaganda_technique] > threshold)[0]
+            accepted_words = np.where(prediction_i[:, propaganda_technique] > threshold[propaganda_technique])[0]
 
             if accepted_words.size > 0:
                 contiguous_techniques = extract_sequences(accepted_words)

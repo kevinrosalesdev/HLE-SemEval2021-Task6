@@ -4,27 +4,32 @@ import torch
 from torch.optim.adam import Adam
 from torch import nn
 from tqdm import tqdm
-from transformers import RobertaTokenizer, RobertaForTokenClassification
+from transformers import AutoTokenizer, AutoModelForTokenClassification, RobertaTokenizer, RobertaForTokenClassification
 from src.model.custom_loss import AsymmetricLoss
 
-
-# TODO: Use transformers trained with Twitter Data
-# TODO: Ensemble of Transformers
 # TODO: Try other losses
-# TODO: Use CLS token
-# TODO: Tune threshold.
+# TODO: test dataset with data augmentation
 
-# TODO: Use word representations
 
 class MEMbErt(nn.Module):
-    def __init__(self):
+    def __init__(self, model):
         super(MEMbErt, self).__init__()
 
-        self.tokenizer = RobertaTokenizer.from_pretrained('roberta-large', add_prefix_space=False)
-        self.tc = RobertaForTokenClassification.from_pretrained('roberta-large', num_labels=20)
-
-        for parameter in list(self.tc.parameters())[:-2]:
-            parameter.requires_grad = False
+        if model == 'roberta-large':
+            self.tokenizer = RobertaTokenizer.from_pretrained('roberta-large', add_prefix_space=False)
+            self.tc = RobertaForTokenClassification.from_pretrained('roberta-large', num_labels=20)
+            for parameter in list(self.tc.parameters())[:-2]:
+                parameter.requires_grad = False
+        elif model == 'roberta-twitter':
+            self.tokenizer = AutoTokenizer.from_pretrained('cardiffnlp/twitter-roberta-base', add_prefix_space=False)
+            self.tc = AutoModelForTokenClassification.from_pretrained('cardiffnlp/twitter-roberta-base', num_labels=20)
+            for parameter in list(self.tc.parameters())[:-10]:
+                parameter.requires_grad = False
+        elif model == 'bertweet':
+            self.tokenizer = AutoTokenizer.from_pretrained('vinai/bertweet-large', add_prefix_space=False)
+            self.tc = AutoModelForTokenClassification.from_pretrained('vinai/bertweet-large', num_labels=20)
+            for parameter in list(self.tc.parameters())[:-10]:
+                parameter.requires_grad = False
 
         # self.fc = nn.Linear(in_features=2, out_features=20)
         self.act = nn.Sigmoid()
@@ -40,13 +45,13 @@ class MEMbErt(nn.Module):
         return out.squeeze(0)
 
 
-def train(input_t_text: list, t_labels: list, input_v_text: list, v_labels: list):
+def train(input_t_text: list, t_labels: list, input_v_text: list, v_labels: list, model_name='roberta-large'):
 
-    model = MEMbErt().cuda()
-    # loss_criterion = nn.BCELoss()  # Binary Cross-Entropy
-    loss_criterion = AsymmetricLoss()
+    model = MEMbErt(model_name).cuda()
+    loss_criterion = nn.BCELoss()  # Binary Cross-Entropy
+    # loss_criterion = AsymmetricLoss()
     optimizer = Adam(model.parameters())
-    num_epochs = 1
+    num_epochs = 3
     batch_size = 1
     batch_per_epoch = len(input_t_text)
     model.train()
@@ -85,7 +90,7 @@ def train(input_t_text: list, t_labels: list, input_v_text: list, v_labels: list
                         tepoch.set_postfix({'loss': np.mean(t_loss_list),
                                             'val_loss': np.mean(val_loss_list)})
 
-    torch.save(model, 'models/MEMbErt.pth')
+    torch.save(model, f'models/{model_name}-MEMbErt-bce-3.pth')
 
 
 def adjust_gt(tokenizer: RobertaTokenizer, sentence: str, output: torch.Tensor) -> torch.Tensor():
